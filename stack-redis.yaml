@@ -1,0 +1,132 @@
+version: '3.7'
+
+#https://bpaulino.com/entries/how-to-use-redis-cluster-for-caching
+
+services:
+
+  node1:
+    container_name: node1
+    hostname: node1
+    image: redis_cluster:1.0
+    expose:
+      - "6379" 
+    networks:
+      - net_overlay
+    deploy:
+      endpoint_mode: dnsrr      
+    volumes:
+      - ./src:/main
+
+  node2:
+    container_name: node2
+    hostname: node2
+    image: redis_cluster:1.0
+    expose:
+      - "6379" 
+    networks:
+      - net_overlay
+    deploy:
+      endpoint_mode: dnsrr      
+    volumes:
+      - ./src:/main
+
+  node3:
+    container_name: node3
+    hostname: node3
+    image: redis_cluster:1.0
+    expose:
+      - "6379" 
+    networks:
+      - net_overlay
+    deploy:
+      endpoint_mode: dnsrr      
+    volumes:
+      - ./src:/main
+
+  node4:
+    container_name: node4
+    hostname: node4
+    image: redis_cluster:1.0
+    expose:
+      - "6379" 
+    networks:
+      - net_overlay
+    deploy:
+      endpoint_mode: dnsrr      
+    volumes:
+      - ./src:/main
+
+  node5:
+    container_name: node5
+    hostname: node5
+    image: redis_cluster:1.0
+    expose:
+      - "6379" 
+    networks:
+      - net_overlay
+    deploy:
+      endpoint_mode: dnsrr      
+    volumes:
+      - ./src:/main
+
+  node6:
+    container_name: node6
+    hostname: node6
+    image: redis_cluster:1.0
+    expose:
+      - "6379" 
+    networks:
+      - net_overlay
+    deploy:
+      endpoint_mode: dnsrr      
+    volumes:
+      - ./src:/main
+
+  cluster_initiator:
+    container_name: cluster_initiator
+    hostname: cluster_initiator
+    image: redis_cluster:1.0
+    environment:
+      INITIATOR: 'yes'
+      NODES: "node1,node2,node3,node4,node5,node6"
+    tty: true
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+      - node5
+      - node6      
+    networks:
+      - net_overlay
+    deploy:
+      endpoint_mode: dnsrr      
+    volumes:
+      - ./src:/main
+    expose:
+      - "6379" 
+
+  cluster_app:
+    container_name: cluster_app
+    hostname: cluster_app
+    image: cluster_app:1.1
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      REDIS_CLUSTER_URLS: 'node1:6379,node2:6379,node3:6379,node4:6379,node5:6379,node6:6379,cluster_initiator:6379'
+    depends_on:
+      - node1
+      - node2
+      - node3
+      - node4
+      - node5
+      - node6
+      - cluster_initiator
+    ports:
+      - "3000:3000"
+    networks:
+      - net_overlay
+
+networks:
+  net_overlay:
+    external: true             

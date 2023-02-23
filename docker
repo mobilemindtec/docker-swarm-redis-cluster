@@ -1,0 +1,28 @@
+#!/bin/bash
+
+
+echo "$1"
+case "$1" in 
+
+	"stop")
+		docker stack rm redis
+		;;
+
+	"build")
+		docker compose build
+		;;
+
+	"logs")
+		docker service logs --tail 100 --follow --raw redis_cluster_initiator
+		;;
+
+	"logs-app")
+		docker service logs --tail 100 --follow --raw redis_cluster_app
+		;;
+
+	"deploy")
+		docker stack deploy --with-registry-auth -c stack-redis.yaml redis
+		;;
+
+esac
+
