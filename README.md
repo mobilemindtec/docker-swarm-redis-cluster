@@ -6,19 +6,19 @@ Docker swarm redis cluster
 
 * Build images
 
-	`$ ./docker build`
+		`$ ./docker build`
 
 * Start Swarm
 
-	`$ ./docker start`
+		`$ ./docker start`
 
 * Log node manager
 	
-	`$ ./docker logs`
+		`$ ./docker logs`
 
 * Open test app
 
-	`http://localhost:3000`
+		`http://localhost:3000`
 
 
 Funcionalidades
