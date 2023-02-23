@@ -155,7 +155,6 @@ proc check_nodes_activity {} {
       lappend ::activeNodes $ip:$::PORT
       continue
     }
-
     
     if {$ip != ""} {
       ${log}::info "address $ip to node $hostname"
@@ -174,6 +173,34 @@ proc check_nodes_activity {} {
   return true
 }
 
+proc node_delete {nodeId} {
+  
+  variable log
+  set cmd [join [list redis-cli --cluster del-node $::nodeMgrAddr $nodeId --cluster-yes >@stdout]]
+
+  if { [catch { 
+    ${log}::info ":: to remove invalid cluster node, executing: $cmd"
+    exec {*}$cmd
+  } err] } {
+    ${log}::error ":: error on REMOVE cluster node: $err"
+  }   
+}
+
+proc node_add {nodeIp} {
+
+  variable log
+  set cmd [join [list redis-cli --cluster add-node $nodeIp:$::PORT $::nodeMgrAddr --cluster-yes >@stdout]]
+
+
+  if { [catch { 
+    ${log}::error ":: to add new cluster node, executing: $cmd"
+    exec {*}$cmd
+    
+    ${log}::info ":: new node updated: $node"
+  } err] } {
+    ${log}::error ":: error on ADD cluster node: $err"
+  }   
+}
 
 proc task_check_nodes_activity {} {
 
@@ -186,7 +213,7 @@ proc task_check_nodes_activity {} {
   }
 
   upvar 1 ::nodes ns 
-  upvar 1 ::nodeMgrAddr masterAddr
+  set needDiscovery false
 
   for {set i 0} {$i < [llength $ns]} {incr i} {
 
@@ -195,39 +222,25 @@ proc task_check_nodes_activity {} {
     ${log}::info ":: check node $node activity"
 
     set hostname [dict get $node hostname]
-    set currip [dict get $node ip]
-    set currid [dict get $node id]
+    set nodeIp [dict get $node ip]
+    set nodeId [dict get $node id]
     set ipaddr [get_host_address $hostname]    
 
     if {"$ipaddr" != ""} {
 
-      if { "$currip" != "$ipaddr" } {
+      if { "$nodeIp" != "$ipaddr" } {
 
-        ${log}::info ":: node $hostname changed IP from $currip to $ipaddr"
+        ${log}::info ":: node $hostname changed IP from $nodeIp to $ipaddr"
         
-        set cmdDelNode [join [list redis-cli --cluster del-node $masterAddr $currid --cluster-yes >@stdout]]
 
-        set cmdAddNode [join [list redis-cli --cluster add-node $ipaddr:$::PORT $masterAddr --cluster-yes >@stdout]]
+        node_delete $nodeId
 
+        node_add $nodeIp
 
-        if { [catch { 
-          ${log}::info ":: to remove invalid cluster node, executing: $cmdDelNode"
-          exec {*}$cmdDelNode
-        } err] } {
-          ${log}::error ":: error on REMOVE cluster node: $err"
-        } 
+        set needDiscovery true
 
-        if { [catch { 
-          ${log}::error ":: to add new cluster node, executing: $cmdAddNode"
-          exec {*}$cmdAddNode
-          
-          ${log}::info ":: new node updated: $node"
-        } err] } {
-          ${log}::error ":: error on ADD cluster node: $err"
-        } 
-
-        dict set node ip $ipaddr
         # atualiza o node dentro da lista global
+        dict set node ip $nodeIp
         lset ns $i $node   
 
 
@@ -239,9 +252,35 @@ proc task_check_nodes_activity {} {
       ${log}::info ":: node $hostname is off-line?"
     }
   }
+
+  if {$needDiscovery} {
+    discovery_nodes
+  }
 }
 
+proc cluster_create {} {
+  variable log
+  set iplist [join $::activeNodes]
+  set cmd [join [list echo "yes" | redis-cli --cluster create $iplist --cluster-replicas 1 --cluster-yes >@stdout]]
+  
+  ${log}::info "execute $cmd"
+  if { [catch { 
+    exec {*}$cmd
+  } error] } {
+    ${log}::error "error on execute cluster create: $error"
+  }  
+}
 
+proc cluster_check {} {
+  variable log
+  set cmd [join [list redis-cli --cluster check $::nodeMgrAddr >@stdout]]
+  ${log}::info "execute $cmd"
+  if { [catch { 
+    exec {*}$cmd
+  } error] } {
+    ${log}::error "error on execute cluster info: $error"
+  }  
+}
 
 ${log}::info "init node.."
 
@@ -286,23 +325,11 @@ if {$initiator} {
 
   ${log}::info "configure cluster with [llength $activeNodes] nodes, activeNodes = $activeNodes"
 
-  set iplist [join  $activeNodes]
-  set cmdClusterCreate [join [list echo "yes" | redis-cli --cluster create $iplist --cluster-replicas 1 --cluster-yes >@stdout]]
-  set cmdClusterInfo [join [list redis-cli --cluster check $nodeMgrAddr >@stdout]]
+  # create cluster
+  cluster_create
   
-  ${log}::info "execute $cmdClusterCreate"
-  if { [catch { 
-    exec {*}$cmdClusterCreate
-  } error] } {
-    ${log}::error "error on execute cluster create: $error"
-  }
-  
-  ${log}::info "execute $cmdClusterInfo"
-  if { [catch { 
-    exec {*}$cmdClusterInfo
-  } error] } {
-    ${log}::error "error on execute cluster info: $error"
-  }
+  # run cluster check to output 
+  cluster_check
 
   discovery_nodes $nodeMgrAddr
 
