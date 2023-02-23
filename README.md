@@ -6,19 +6,19 @@ Docker swarm redis cluster
 
 * Build images
 
-	$ ./docker build
+		`$ ./docker build`
 
 * Start Swarm
 
-	$ ./docker start
+		`$ ./docker start`
 
 * Log node manager
-
-	$ ./docker logs
+	
+		`$ ./docker logs`
 
 * Open test app
 
-	http://localhost:3000
+		`http://localhost:3000`
 
 
 Funcionalidades
@@ -30,7 +30,7 @@ _______________
 - Busca os IDs dos nós para cada serviço, baseado no IP
 - Monitora quando um serviço muda de IP, no caso de reinicialização, realocação, etc..
 - Quando um IP muda 
-	* Remove o nó do cluster
+	* Tenta remover o nó do cluster
 	* Adiciona o novo IP no cluster
 	* Atualiza o IP e a lista de IDs
 
