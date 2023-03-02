@@ -10,11 +10,23 @@ Docker swarm redis cluster
 
 * Start Swarm
 
-		`$ ./docker start`
+		`$ ./docker deploy`
 
-* Log node manager
+* Stop Swarm
+
+		`$ ./docker stop`
+
+* Logs node manager
 	
 		`$ ./docker logs`
+
+* Logs app
+		
+		`$ ./docker logs-app`
+
+* Logs nodes
+		
+		`$ ./docker logs-node1` # node1, node2, node3, ...
 
 * Open test app
 
@@ -24,19 +36,16 @@ Docker swarm redis cluster
 Funcionalidades
 _______________
 
-- O gerenciador aguarda todas os serviços subirem
-- Descobre os IPs dos serviços
-- Inicia o cluster com a lista de IPs descobertos
-- Busca os IDs dos nós para cada serviço, baseado no IP
-- Monitora quando um serviço muda de IP, no caso de reinicialização, realocação, etc..
-- Quando um IP muda 
-	* Tenta remover o nó do cluster
-	* Adiciona o novo IP no cluster
-	* Atualiza o IP e a lista de IDs
+- Ao inciar o ADM, ele verifica se o cluster está on-line, solicitando o status dos nós baseado na ENV CLUSTER_NODES.
 
+	- Se estiver on-line, adiciona a sí mesmo no clster 
+	- Se não, inicia o cluster assim que 6 nós ingressarem no cluster
 
-TODO
-____
+- Ao iniciar um NÓ, ele envia uma mensagem ao ADM solicitando ingresso no cluster
 
-- Ver o que acontece quando a maquina gerenciadora reinicia, isso ainda não foi tratado nem testado	
+- Quando o cluster é criado, o ADM envia mensagem para todos os nós indicando que estão on-line
+- Quando um novo nó é adicionado, o ADM envia uma mensagem ao nó informando que ele está on-line
+
+- Assim que recebe o mansagem de que está on-line, o nó envia constantemente uma mensagem para o ADM informando estar on-line
+
 	 

@@ -13,7 +13,31 @@ case "$1" in
 		;;
 
 	"logs")
-		docker service logs --tail 100 --follow --raw redis_cluster_initiator
+		docker service logs --tail 100 --follow --raw redis_cluster_adm
+		;;
+
+	"logs-node1")
+		docker service logs --tail 100 --follow --raw redis_node1
+		;;
+
+	"logs-node2")
+		docker service logs --tail 100 --follow --raw redis_node2
+		;;
+
+	"logs-node3")
+		docker service logs --tail 100 --follow --raw redis_node3
+		;;
+
+	"logs-node4")
+		docker service logs --tail 100 --follow --raw redis_node4
+		;;
+
+	"logs-node5")
+		docker service logs --tail 100 --follow --raw redis_node5
+		;;
+
+	"logs-node6")
+		docker service logs --tail 100 --follow --raw redis_node6
 		;;
 
 	"logs-app")
@@ -21,7 +45,7 @@ case "$1" in
 		;;
 
 	"deploy")
-		docker stack deploy --with-registry-auth -c stack-redis.yaml redis
+		docker stack deploy --with-registry-auth -c stack-redis-new.yaml redis
 		;;
 
 esac

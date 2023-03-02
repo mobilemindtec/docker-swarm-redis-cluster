@@ -2,7 +2,7 @@ require('dotenv').config()
 const path = require('path')
 const express = require('express')
 const hbs = require('express-handlebars')
-const buildRedisClient = require('./service/redisClient')
+const buildRedisClient = require('./service/redis-client')
 
 const app = express()
 const port = process.env.PORT || 3000
